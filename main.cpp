@@ -43,30 +43,16 @@ const int NUM_DIRECTIONS = 4;
 const int DIRECTION_ROW[NUM_DIRECTIONS] = { 1, 0, -1, 0 };
 const int DIRECTION_COL[NUM_DIRECTIONS] = { 0, 1, 0, -1 };
 
-// -----------------------------------------------------------------------
-// Reads the maze dimensions and contents from standard input.
-// -----------------------------------------------------------------------
-void readMaze(int &rows, int &cols, Matrix &maze) {
-    cin >> rows >> cols;
-    maze.assign(rows, vector<int>(cols, 0));
-    for (int row = 0; row < rows; ++row) {
-        for (int col = 0; col < cols; ++col) {
-            cin >> maze[row][col];
-        }
-    }
-}
 
 // -----------------------------------------------------------------------
 // Reads the maze from a string (for testing)
 // -----------------------------------------------------------------------
-void readMazeFromString(const string& input, int &rows, int &cols, Matrix &maze) {
-    istringstream iss(input);
-    iss >> rows >> cols;
-    
+void readMaze(int &rows, int &cols, Matrix &maze) {
+    if (!(cin >> rows >> cols)) return;
     maze.assign(rows, vector<int>(cols, 0));
     for (int row = 0; row < rows; ++row) {
         for (int col = 0; col < cols; ++col) {
-            iss >> maze[row][col];
+            cin >> maze[row][col];
         }
     }
 }
@@ -152,6 +138,9 @@ int manhattanDistance(int row, int col, int goalRow, int goalCol) {
 
 Matrix solveWithBranchAndBound(const Matrix &maze, int rows, int cols) {
     Matrix path(rows, vector<int>(cols, 0));
+    
+    if (rows == 0 || cols == 0) return path;
+
     bool startAndExitOpen = maze[0][0] == 1 && maze[rows - 1][cols - 1] == 1;
 
     if (!startAndExitOpen) {
@@ -224,121 +213,30 @@ Matrix solveWithBranchAndBound(const Matrix &maze, int rows, int cols) {
     return path;
 }
 
-// =======================================================================
-// TEST FUNCTIONS
-// =======================================================================
-
-void runTest(const string& testName, const string& input) {
-    cout << "\n" << string(60, '=') << "\n";
-    cout << "TEST: " << testName << "\n";
-    cout << string(60, '=') << "\n";
-    
-    int rows, cols;
-    Matrix maze;
-    readMazeFromString(input, rows, cols, maze);
-    
-    cout << "\nOriginal Maze:\n";
-    printSolution(maze);
-    cout << "\n";
-
-    Matrix backtrackingSolution = solveWithBacktracking(maze, rows, cols);
-    cout << "Backtracking Solution:\n";
-    printSolution(backtrackingSolution);
-    cout << "\n";
-
-    Matrix branchAndBoundSolution = solveWithBranchAndBound(maze, rows, cols);
-    cout << "Branch and Bound Solution:\n";
-    printSolution(branchAndBoundSolution);
-    cout << "\n";
-}
 
 // -----------------------------------------------------------------------
 // Program entry point - runs all tests
 // -----------------------------------------------------------------------
 int main() {
-    cout << "========================================\n";
-    cout << "MAZE SOLVER - Backtracking vs Branch & Bound\n";
-    cout << "========================================\n";
-    cout << "Running Test Suite...\n\n";
+    int rows = 0, cols = 0;
+    Matrix maze;
 
-    // Test 1: Simple 3x3 open maze (has solution)
-    string test1 = R"(3 3
-1 1 1
-1 1 1
-1 1 1)";
-    runTest("Simple 3x3 Open Maze", test1);
+    // Reads dynamically from standard input (< in.txt)
+    readMaze(rows, cols, maze);
 
-    // Test 2: 3x3 with wall (has solution)
-    string test2 = R"(3 3
-1 1 1
-1 0 1
-1 1 1)";
-    runTest("3x3 Maze with Wall", test2);
+    // Failsafe if input is empty
+    if (rows == 0 || cols == 0) return 0;
 
-    // Test 3: 3x3 with no solution
-    string test3 = R"(3 3
-1 0 1
-1 0 1
-1 1 0)";
-    runTest("3x3 Maze - No Solution", test3);
+    // 1. Backtracking Solution
+    Matrix backtrackingSolution = solveWithBacktracking(maze, rows, cols);
+    printSolution(backtrackingSolution);
+    
+    // Exact blank line separator requested in the instructions
+    cout << "\n";
 
-    // Test 4: 4x4 maze with obstacles (has solution)
-    string test4 = R"(4 4
-1 1 1 1
-1 0 0 1
-1 1 1 1
-1 1 1 1)";
-    runTest("4x4 Maze with Obstacles", test4);
-
-    // Test 5: 1x1 maze (start = exit)
-    string test5 = R"(1 1
-1)";
-    runTest("1x1 Maze - Start equals Exit", test5);
-
-    // Test 6: 2x2 maze
-    string test6 = R"(2 2
-1 1
-1 1)";
-    runTest("2x2 Open Maze", test6);
-
-    // Test 7: Start blocked (no solution)
-    string test7 = R"(3 3
-0 1 1
-1 1 1
-1 1 1)";
-    runTest("Start Blocked - No Solution", test7);
-
-    // Test 8: Exit blocked (no solution)
-    string test8 = R"(3 3
-1 1 1
-1 1 1
-1 1 0)";
-    runTest("Exit Blocked - No Solution", test8);
-
-    // Test 9: 5x5 maze with path
-    string test9 = R"(5 5
-1 1 1 1 1
-1 0 0 0 1
-1 1 1 0 1
-0 0 1 0 1
-1 1 1 1 1)";
-    runTest("5x5 Complex Maze", test9);
-
-    // Test 10: Large open maze (8x8)
-    string test10 = R"(8 8
-1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1)";
-    runTest("8x8 Open Maze (Large)", test10);
-
-    cout << "\n" << string(60, '=') << "\n";
-    cout << "ALL TESTS COMPLETED\n";
-    cout << string(60, '=') << "\n";
+    // 2. Branch and Bound Solution
+    Matrix branchAndBoundSolution = solveWithBranchAndBound(maze, rows, cols);
+    printSolution(branchAndBoundSolution);
 
     return 0;
 }
